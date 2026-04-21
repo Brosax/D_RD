@@ -41,13 +41,13 @@ export function BypassPermissionsModeDialog({
 
   return (
     <Dialog
-      title="WARNING: Claude Code running in Bypass Permissions mode"
+      title="WARNING: Dekra CLI running in Bypass Permissions mode"
       color="error"
       onCancel={handleEscape}
     >
       <Box flexDirection="column" gap={1}>
         <Text>
-          In Bypass Permissions mode, Claude Code will not ask for your approval
+          In Bypass Permissions mode, Dekra CLI will not ask for your approval
           before running potentially dangerous commands.
           <Newline />
           This mode should only be used in a sandboxed container/VM that has

@@ -1,0 +1,16 @@
+{
+  "name": "code_analyzer",
+  "version": "0.1.0",
+  "description": "C/C++ source code security analysis plugin for SESIP compliance",
+  "commands": ["/analyze"],
+  "tools": [
+    "rule_engine.scan",
+    "rule_engine.check_sesip",
+    "local_model.analyze_context",
+    "local_model.detect_pattern",
+    "file_discovery.scan"
+  ],
+  "requires_local_model": true,
+  "supported_languages": ["c", "cpp", "cxx", "h", "hpp"],
+  "supported_formats": ["json", "html", "pdf"]
+}

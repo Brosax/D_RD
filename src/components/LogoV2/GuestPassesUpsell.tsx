@@ -26,17 +26,7 @@ function resetIfPassesRefreshed(): void {
 }
 
 function shouldShowGuestPassesUpsell(): boolean {
-  const { eligible, hasCache } = checkCachedPassesEligibility()
-  // Only show if eligible and cache exists (don't block on fetch)
-  if (!eligible || !hasCache) return false
-  // Reset upsell counters if passes were refreshed (covers both campaign change and pass refresh)
-  resetIfPassesRefreshed()
-
-  const config = getGlobalConfig()
-  if ((config.passesUpsellSeenCount ?? 0) >= 3) return false
-  if (config.hasVisitedPasses) return false
-
-  return true
+  return false
 }
 
 export function useShowGuestPassesUpsell(): boolean {
@@ -66,7 +56,7 @@ export function GuestPassesUpsell(): React.ReactNode {
       <Text color="claude">[✻]</Text> <Text color="claude">[✻]</Text>{' '}
       <Text color="claude">[✻]</Text> ·{' '}
       {reward
-        ? `Share Claude Code and earn ${formatCreditAmount(reward)} of extra usage · /passes`
+        ? `Share Dekra CLI and earn ${formatCreditAmount(reward)} of extra usage · /passes`
         : '3 guest passes at /passes'}
     </Text>
   )

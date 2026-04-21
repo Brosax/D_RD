@@ -1,0 +1,13 @@
+{
+  "name": "local-plugins",
+  "owner": {
+    "name": "Local Developer"
+  },
+  "plugins": [
+    {
+      "name": "code-analyzer",
+      "source": "./code_analyzer",
+      "description": "C/C++ source code security analysis plugin for SESIP compliance"
+    }
+  ]
+}

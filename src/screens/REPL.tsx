@@ -5014,7 +5014,7 @@ export function REPL({
     const handleSuspend = () => {
       // Print suspension instructions
       process.stdout.write(
-        `\nClaude Code has been suspended. Run \`fg\` to bring Claude Code back.\nNote: ctrl + z now suspends Claude Code, ctrl + _ undoes input.\n`,
+        `\nDekra CLI has been suspended. Run \`fg\` to bring Dekra CLI back.\nNote: ctrl + z now suspends Dekra CLI, ctrl + _ undoes input.\n`,
       );
     };
 

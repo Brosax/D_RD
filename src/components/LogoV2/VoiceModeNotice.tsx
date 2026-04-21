@@ -22,13 +22,7 @@ function VoiceModeNoticeInner(): React.ReactNode {
   // re-render after it's in scrollback would force a full terminal reset.
   // If the user runs /voice this session, the notice stays visible; it won't
   // show next session since voiceEnabled will be true on disk.
-  const [show] = useState(
-    () =>
-      isVoiceModeEnabled() &&
-      getInitialSettings().voiceEnabled !== true &&
-      (getGlobalConfig().voiceNoticeSeenCount ?? 0) < MAX_SHOW_COUNT &&
-      !shouldShowOpus1mMergeNotice(),
-  )
+  const [show] = useState(() => false)
 
   useEffect(() => {
     if (!show) return

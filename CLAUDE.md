@@ -21,6 +21,15 @@ This is a **reverse-engineered / decompiled** version of Anthropic's official Cl
 - `fix: 修复初次登陆的校验问题`
 - `chore: remove prefetchOfficialMcpUrls call on startup`
 
+## 版本管理
+
+每次修改代码后，需要：
+
+1. **更新系统小版本号**：在 `scripts/defines.ts` 中将 `MACRO.VERSION` 从 `v1.0.X` 升级到 `v1.0.X+1`
+2. **详细描述改动**：在 commit message 中说明具体改了什么、为什么改
+
+版本号格式：`v<major>.<minor>.<patch>`，只做向下兼容的小改动时只改 patch（如 v1.0.1 → v1.0.2）
+
 ## Commands
 
 ```bash

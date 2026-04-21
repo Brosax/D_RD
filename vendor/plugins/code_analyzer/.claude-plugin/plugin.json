@@ -1,0 +1,16 @@
+{
+  "name": "code-analyzer",
+  "version": "0.1.0",
+  "description": "C/C++ source code security analysis plugin for SESIP compliance with AI-powered multi-round verification",
+  "author": {
+    "name": "SESIP Tools"
+  },
+  "commands": {
+    "analyze": {
+      "source": "./commands/analyze/SKILL.md",
+      "description": "Analyze C/C++ source code for security vulnerabilities, code quality issues, and SESIP compliance",
+      "argumentHint": "<path_to_code>",
+      "allowedTools": ["Read", "Glob", "Grep", "Bash"]
+    }
+  }
+}
