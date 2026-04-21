@@ -1,0 +1,340 @@
+/**
+ * SESIP Security Rules data.
+ * Converted from sesip_rules.yaml
+ */
+
+import type { SesipRule } from '../types.js'
+
+export const sesipRules: SesipRule[] = [
+  // Memory Safety
+  {
+    id: 'MS-001',
+    name: 'Buffer Overflow - String Copy',
+    category: 'memory_safety',
+    severity: 'high',
+    patterns: [
+      'strcpy\\s*\\(',
+      'strcat\\s*\\(',
+      'sprintf\\s*\\(',
+      'gets\\s*\\(',
+    ],
+    remediation: 'Use strncpy, snprintf, strlcpy, or explicit size checks',
+  },
+  {
+    id: 'MS-002',
+    name: 'Buffer Overflow - Memory Copy',
+    category: 'memory_safety',
+    severity: 'high',
+    patterns: [
+      'memcpy\\s*\\([^,]+,[^,]+,[^)]+\\)',
+    ],
+    remediation: 'Verify sizes before copy operations',
+  },
+  {
+    id: 'MS-003',
+    name: 'Use-After-Free',
+    category: 'memory_safety',
+    severity: 'high',
+    patterns: [
+      'free\\s*\\([^)]+\\)',
+    ],
+    requiresContext: true,
+    remediation: 'Set pointer to NULL after free, use-after-free detectors',
+  },
+  {
+    id: 'MS-004',
+    name: 'Dangling Pointer',
+    category: 'memory_safety',
+    severity: 'high',
+    patterns: [
+      'return\\s+[^;]+after\\s+free',
+      'pointer.*exposed.*after.*free',
+    ],
+    requiresContext: true,
+    remediation: 'Clear pointer on free, use smart pointers in C++',
+  },
+  {
+    id: 'MS-005',
+    name: 'Uninitialized Memory',
+    category: 'memory_safety',
+    severity: 'high',
+    patterns: [
+      'malloc\\s*\\(',
+      'calloc\\s*\\(',
+    ],
+    remediation: 'Use calloc or explicit memset, initialize all struct fields',
+  },
+  {
+    id: 'MS-006',
+    name: 'Integer Overflow',
+    category: 'memory_safety',
+    severity: 'high',
+    patterns: [
+      '\\*[ ]*[a-z_]*size[ )]',
+      'malloc\\s*\\([^)]*\\*[)]',
+    ],
+    remediation: 'Check for overflow before allocation, use checked_mul',
+  },
+
+  // Cryptographic Operations
+  {
+    id: 'CR-001',
+    name: 'Hardcoded Cryptographic Keys',
+    category: 'cryptography',
+    severity: 'high',
+    patterns: [
+      '"AES',
+      '"DES',
+      'key.*=.*"',
+      'secret.*=.*"',
+      'token.*=.*"',
+      'static const char.*key',
+    ],
+    falsePositives: ['key_buffer', 'key_size', 'PUBLIC_KEY'],
+    remediation: 'Use secure key storage (TPM, HSM, keyvault) or secure memory',
+  },
+  {
+    id: 'CR-002',
+    name: 'Weak Cryptographic Algorithms',
+    category: 'cryptography',
+    severity: 'high',
+    patterns: [
+      '\\bDES\\b',
+      '\\bMD5\\b',
+      '\\bSHA1\\b',
+      '\\bRC4\\b',
+      '\\bECB\\b',
+    ],
+    remediation: 'Use AES-256, SHA-256+, ChaCha20, RSA-2048+',
+  },
+  {
+    id: 'CR-003',
+    name: 'Improper IV/Nonce',
+    category: 'cryptography',
+    severity: 'high',
+    patterns: [
+      'IV\\s*=\\s*0',
+      'IV\\s*=\\s*NULL',
+      'nonce\\s*=\\s*0',
+    ],
+    remediation: 'Use random IV/nonce, never reuse for same key',
+  },
+  {
+    id: 'CR-004',
+    name: 'Missing Cryptographic Seed',
+    category: 'cryptography',
+    severity: 'high',
+    patterns: [
+      'srand\\s*\\(',
+      'initstate\\s*\\(',
+    ],
+    remediation: 'Use /dev/urandom, getrandom(), or hardware RNG',
+  },
+  {
+    id: 'CR-005',
+    name: 'Predictable Random Numbers',
+    category: 'cryptography',
+    severity: 'high',
+    patterns: [
+      '\\brand\\s*\\(',
+      '\\brandom\\s*\\(',
+    ],
+    inSecurityContext: ['key', 'token', 'password', 'salt', 'nonce'],
+    remediation: 'Use arc4random, RAND_bytes, getrandom()',
+  },
+  {
+    id: 'CR-006',
+    name: 'Key Derivation Without KDF',
+    category: 'cryptography',
+    severity: 'medium',
+    patterns: [
+      'password\\s*[^=]*=\\s*[^\'"]+"',
+      'md5\\s*\\([^)]*password',
+      'sha1\\s*\\([^)]*password',
+    ],
+    remediation: 'Use PBKDF2, Argon2, scrypt for key derivation',
+  },
+
+  // Input Validation
+  {
+    id: 'IV-001',
+    name: 'Unvalidated User Input',
+    category: 'input_validation',
+    severity: 'high',
+    patterns: [
+      'scanf\\s*\\(',
+      'gets\\s*\\(',
+      'fgets\\s*\\([^,]+,[^,]+,stdin\\)',
+    ],
+    remediation: 'Validate type, range, length before processing',
+  },
+  {
+    id: 'IV-002',
+    name: 'Format String Vulnerability',
+    category: 'input_validation',
+    severity: 'high',
+    patterns: [
+      'printf\\s*\\([^,]*buf',
+      'sprintf\\s*\\([^,]*buf',
+      'fprintf\\s*\\([^,]*buf',
+    ],
+    remediation: 'Use format string literals: printf("%s", buf)',
+  },
+  {
+    id: 'IV-003',
+    name: 'SQL/Command Injection',
+    category: 'input_validation',
+    severity: 'high',
+    patterns: [
+      'sql.*\\+',
+      'SELECT.*\\+.*user',
+      'system\\s*\\(',
+      'popen\\s*\\(',
+      'exec\\s*\\([^)]*\\+',
+    ],
+    remediation: 'Use parameterized queries, shell escape functions',
+  },
+  {
+    id: 'IV-004',
+    name: 'Integer Overflow in Input',
+    category: 'input_validation',
+    severity: 'high',
+    patterns: [
+      'atoi\\s*\\(',
+      'atol\\s*\\(',
+      'strtol\\s*\\(',
+    ],
+    remediation: 'Validate and bounds-check before use',
+  },
+  {
+    id: 'IV-005',
+    name: 'Path Traversal',
+    category: 'input_validation',
+    severity: 'high',
+    patterns: [
+      '\\.\\.\\/',
+      'realpath\\s*\\(',
+    ],
+    remediation: 'Canonicalize paths, validate against allowlist',
+  },
+  {
+    id: 'IV-007',
+    name: 'Missing Bounds Check',
+    category: 'input_validation',
+    severity: 'high',
+    patterns: [
+      '\\[.*\\]',
+    ],
+    remediation: 'Check bounds before every array access',
+  },
+
+  // Access Control
+  {
+    id: 'AC-002',
+    name: 'Hardcoded Credentials',
+    category: 'access_control',
+    severity: 'high',
+    patterns: [
+      'password\\s*=\\s*"',
+      'admin\\s*[:=]\\s*"',
+      'default.*password',
+    ],
+    remediation: 'Force password change on first boot, no defaults',
+  },
+  {
+    id: 'AC-004',
+    name: 'Insecure File Permissions',
+    category: 'access_control',
+    severity: 'medium',
+    patterns: [
+      'chmod\\s*.*777',
+      'chmod\\s*.*0777',
+    ],
+    remediation: 'Use 600/400 for sensitive files, respect umask',
+  },
+  {
+    id: 'AC-005',
+    name: 'TOCTOU Race Condition',
+    category: 'access_control',
+    severity: 'medium',
+    patterns: [
+      'access\\s*\\(',
+    ],
+    remediation: 'Use atomic operations, lock files',
+  },
+
+  // Error Handling
+  {
+    id: 'EH-001',
+    name: 'Information Leakage',
+    category: 'error_handling',
+    severity: 'medium',
+    patterns: [
+      'perror\\s*\\(',
+      'strerror\\s*\\(',
+      'fprintf\\s*.*stderr',
+    ],
+    remediation: 'Log details internally, show generic message externally',
+  },
+  {
+    id: 'EH-002',
+    name: 'Logging Sensitive Data',
+    category: 'error_handling',
+    severity: 'medium',
+    patterns: [
+      'log.*password',
+      'log.*key',
+      'log.*secret',
+      'printf.*password',
+    ],
+    remediation: 'Sanitize logs, never log secrets',
+  },
+  {
+    id: 'EH-003',
+    name: 'Missing Error Handling',
+    category: 'error_handling',
+    severity: 'medium',
+    patterns: [
+      'malloc\\s*\\(',
+      'fopen\\s*\\(',
+    ],
+    remediation: 'Check all return values, fail securely',
+  },
+
+  // Secure Coding
+  {
+    id: 'SC-001',
+    name: 'TODO in Security Code',
+    category: 'secure_coding',
+    severity: 'low',
+    patterns: [
+      'TODO',
+      'FIXME',
+      'XXX',
+      'HACK',
+    ],
+    inSecurityContext: ['auth', 'crypto', 'key', 'password', 'secure'],
+    remediation: 'Complete or track security TODOs separately',
+  },
+  {
+    id: 'SC-002',
+    name: 'Magic Numbers',
+    category: 'secure_coding',
+    severity: 'low',
+    patterns: [
+      '\\b[0-9]{4,}\\b',
+    ],
+    remediation: 'Use named constants with units in comments',
+  },
+  {
+    id: 'SC-004',
+    name: 'Dead Code',
+    category: 'secure_coding',
+    severity: 'low',
+    patterns: [
+      'return\\s*;\\s*\\}',
+      '//.*never.*reach',
+    ],
+    remediation: 'Remove dead code, enable compiler warnings',
+  },
+]

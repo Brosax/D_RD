@@ -448,7 +448,7 @@ export function Feedback({
           <Box marginTop={1}>
             <Text wrap="wrap" dimColor>
               We will use your feedback to debug related issues or to improve{' '}
-              Claude Code&apos;s functionality (eg. to reduce the risk of bugs
+              Dekra CLI&apos;s functionality (eg. to reduce the risk of bugs
               occurring in the future).
             </Text>
           </Box>
@@ -589,7 +589,7 @@ async function generateTitle(
     const response = await queryHaiku({
       systemPrompt: asSystemPrompt([
         'Generate a concise, technical issue title (max 80 chars) for a public GitHub issue based on this bug report for Claude Code.',
-        'Claude Code is an agentic coding CLI based on the Anthropic API.',
+        'Dekra CLI is an agentic coding CLI based on the Anthropic API.',
         'The title should:',
         '- Include the type of issue [Bug] or [Feature Request] as the first thing in the title',
         '- Be concise, specific and descriptive of the actual problem',

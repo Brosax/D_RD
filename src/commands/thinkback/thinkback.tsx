@@ -370,8 +370,8 @@ function ThinkbackMenu({
 
   return (
     <Dialog
-      title="Think Back on 2025 with Claude Code"
-      subtitle="Generate your 2025 Claude Code Think Back (takes a few minutes to run)"
+      title="Think Back on 2025 with Dekra CLI"
+      subtitle="Generate your 2025 Dekra CLI Think Back (takes a few minutes to run)"
       onCancel={handleCancel}
       color="claude"
     >

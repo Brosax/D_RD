@@ -205,7 +205,7 @@ function StatsContent({
     return (
       <Box marginTop={1}>
         <Text color="warning">
-          No stats available yet. Start using Claude Code!
+          No stats available yet. Start using Dekra CLI!
         </Text>
       </Box>
     )

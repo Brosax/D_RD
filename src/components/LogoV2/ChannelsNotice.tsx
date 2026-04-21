@@ -17,6 +17,10 @@ import { getMcpConfigsByScope } from '../../services/mcp/config.js'
 import { loadInstalledPluginsV2 } from '../../utils/plugins/installedPluginsManager.js'
 
 export function ChannelsNotice(): React.ReactNode {
+  return null
+}
+
+function ChannelsNoticeInner(): React.ReactNode {
   // Snapshot all reads at mount. This notice enters scrollback immediately
   // after the logo; any re-render past that point forces a full terminal
   // reset.

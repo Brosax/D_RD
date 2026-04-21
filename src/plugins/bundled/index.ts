@@ -15,10 +15,12 @@
  */
 
 import { registerWeixinBuiltinPlugin } from './weixin.js'
+import { registerCodeAnalyzerBuiltinPlugin } from './codeAnalyzer/index.js'
 
 /**
  * Initialize built-in plugins. Called during CLI startup.
  */
 export function initBuiltinPlugins(): void {
   registerWeixinBuiltinPlugin()
+  registerCodeAnalyzerBuiltinPlugin()
 }
