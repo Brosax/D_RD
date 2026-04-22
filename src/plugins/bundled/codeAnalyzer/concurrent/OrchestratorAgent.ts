@@ -8,6 +8,7 @@ import { FileScheduler } from './FileScheduler.js'
 import { ConcurrencyManager } from './ConcurrencyManager.js'
 import { DedupEngine } from './DedupEngine.js'
 import { WorkerAgent } from './WorkerAgent.js'
+import { ReportManager } from './ReportManager.js'
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -21,6 +22,7 @@ export class OrchestratorAgent {
   private dedupEngine: DedupEngine
   private workers: Map<string, WorkerAgent>
   private session: AnalysisSession
+  private reportManager: ReportManager
   private static readonly MIN_ROUNDS = 2
 
   constructor(config: ConcurrentAnalysisConfig, files: string[]) {
@@ -42,6 +44,7 @@ export class OrchestratorAgent {
     this.fileScheduler = new FileScheduler(files, config.workerCount, config.crossValidationCount)
     this.concurrencyManager = new ConcurrencyManager(config.workerCount)
     this.dedupEngine = new DedupEngine()
+    this.reportManager = new ReportManager(config.targetPath)
     this.workers = new Map()
 
     // Create worker agents
@@ -61,6 +64,10 @@ export class OrchestratorAgent {
   }
 
   async run(): Promise<AnalysisSession> {
+    // Initialize report directory
+    await this.reportManager.initialize()
+    console.log(`[Report] Created report directory: ${this.reportManager.getBasePath()}`)
+
     this.timer.start()
 
     while (this.timer.shouldContinue()) {
@@ -116,8 +123,17 @@ export class OrchestratorAgent {
 
     this.timer.stop()
     this.session.endTime = new Date()
-    this.session.findings = this.dedupEngine.getResults()
 
+    // Generate final report
+    const findings = this.dedupEngine.getResults()
+    const reportPath = await this.reportManager.generateReport(findings, {
+      filesScanned: this.session.filesScanned.size,
+      filesTotal: this.session.filesTotal,
+      currentRound: this.session.currentRound,
+    })
+    console.log(`[Report] Final report generated: ${reportPath}`)
+
+    this.session.findings = findings
     return this.session
   }
 
@@ -137,6 +153,14 @@ export class OrchestratorAgent {
         }
 
         const result = await worker.analyzeFile(filePath)
+
+        // Write to persistent log
+        await this.reportManager.writeWorkerLog(
+          workerId,
+          this.session.currentRound,
+          result
+        )
+
         this.processWorkerResult(result)
 
       } finally {
@@ -163,5 +187,9 @@ export class OrchestratorAgent {
 
   getAggregatedFindings() {
     return this.dedupEngine.getResults()
+  }
+
+  getReportManager(): ReportManager {
+    return this.reportManager
   }
 }
