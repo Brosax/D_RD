@@ -3,7 +3,7 @@
  */
 
 import type { AnalysisSession, ConcurrentAnalysisConfig, WorkerResult } from './types.js'
-import { TimeController } from './TimeController.js'
+import { CountdownTimer } from './CountdownTimer.js'
 import { FileScheduler } from './FileScheduler.js'
 import { ConcurrencyManager } from './ConcurrencyManager.js'
 import { DedupEngine } from './DedupEngine.js'
@@ -15,7 +15,7 @@ function sleep(ms: number): Promise<void> {
 
 export class OrchestratorAgent {
   private config: ConcurrentAnalysisConfig
-  private timeController: TimeController
+  private timer: CountdownTimer
   private fileScheduler: FileScheduler
   private concurrencyManager: ConcurrencyManager
   private dedupEngine: DedupEngine
@@ -24,7 +24,20 @@ export class OrchestratorAgent {
 
   constructor(config: ConcurrentAnalysisConfig, files: string[]) {
     this.config = config
-    this.timeController = new TimeController(config.runtimeMinutes)
+    const totalMs = config.runtimeMinutes * 60 * 1000
+    this.timer = new CountdownTimer({
+      initialMs: totalMs,
+      warningThresholdMs: Math.min(60000, totalMs * 0.1),
+      onTick: (remaining) => {
+        // 可选：更新进度
+      },
+      onWarning: (remaining) => {
+        console.log(`[Warning] Only ${Math.ceil(remaining / 1000)}s remaining`)
+      },
+      onExpire: () => {
+        console.log('[Timer] Time expired')
+      },
+    })
     this.fileScheduler = new FileScheduler(files, config.workerCount, config.crossValidationCount)
     this.concurrencyManager = new ConcurrencyManager(config.workerCount)
     this.dedupEngine = new DedupEngine()
@@ -47,17 +60,17 @@ export class OrchestratorAgent {
   }
 
   async run(): Promise<AnalysisSession> {
-    this.timeController.start()
+    this.timer.start()
 
-    while (this.timeController.shouldContinue()) {
+    while (this.timer.shouldContinue()) {
       // Get batch of files to process
       const batchSize = this.config.workerCount * this.config.crossValidationCount
       const batch = this.fileScheduler.nextBatch(batchSize)
 
       if (batch.length === 0) {
         // 本批次处理完毕，检查是否可以开启新轮次
-        const remaining = this.timeController.remainingMs()
-        const totalMs = this.timeController.getTotalMs()
+        const remaining = this.timer.remaining()
+        const totalMs = this.timer.getTotalMs()
         const minRoundTime = Math.min(60000, totalMs * 0.1)  // 剩余时间的 10% 或 1 分钟
 
         if (remaining < minRoundTime) break
@@ -79,6 +92,7 @@ export class OrchestratorAgent {
       await sleep(100)
     }
 
+    this.timer.stop()
     this.session.endTime = new Date()
     this.session.findings = this.dedupEngine.getResults()
 
