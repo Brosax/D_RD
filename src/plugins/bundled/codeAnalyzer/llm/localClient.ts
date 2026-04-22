@@ -41,14 +41,6 @@ export class LocalModelClient {
     codeSnippet: string,
     context: Record<string, string>
   ): Promise<LlmAnalysisResult | null> {
-    if (!this.available) {
-      await this.checkAvailability()
-    }
-
-    if (!this.available) {
-      return null
-    }
-
     try {
       const prompt = this.buildAnalysisPrompt(codeSnippet, context)
       const response = await this.callModel(prompt)

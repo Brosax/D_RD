@@ -43,18 +43,15 @@ export class WorkerAgent {
       // Phase 1: Rule engine scan
       const ruleMatches = ruleEngine.scan(content, filePath)
 
-      // Phase 2: LLM analysis for high confidence matches
+      // Phase 2: LLM analysis for all matches
       const llmResults = new Map()
-      if (ruleMatches.length > 0) {
-        const topMatches = ruleMatches.slice(0, 5)
-        for (const match of topMatches) {
-          const result = await llmClient.analyzeContext(match.snippet, {
-            file: filePath,
-            rule: match.ruleId,
-          })
-          if (result) {
-            llmResults.set(match.ruleId, result)
-          }
+      for (const match of ruleMatches) {
+        const result = await llmClient.analyzeContext(match.snippet, {
+          file: filePath,
+          rule: match.ruleId,
+        })
+        if (result) {
+          llmResults.set(match.ruleId, result)
         }
       }
 
