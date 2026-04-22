@@ -161,18 +161,15 @@ export class CodeAnalyzerPlugin {
       }
     }
 
-    // Phase 3: LLM deep analysis (round 2) for suspicious findings
+    // Phase 2: LLM deep analysis for all findings
     const round2Results: unknown[] = []
-    if (round1Results.length > 0) {
-      await this.llmClient.checkAvailability()
-      for (const match of round1Results.slice(0, 5)) {
-        const llmAnalysis = await this.llmClient.analyzeContext(match.snippet, {
-          file: match.file,
-          rule: match.ruleId,
-        })
-        if (llmAnalysis) {
-          round2Results.push(llmAnalysis as unknown)
-        }
+    for (const match of round1Results) {
+      const llmAnalysis = await this.llmClient.analyzeContext(match.snippet, {
+        file: match.file,
+        rule: match.ruleId,
+      })
+      if (llmAnalysis) {
+        round2Results.push(llmAnalysis as unknown)
       }
     }
 
