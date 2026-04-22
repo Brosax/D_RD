@@ -25,4 +25,8 @@ export class TimeController {
   getElapsedMs(): number {
     return Date.now() - this.startTime
   }
+
+  getTotalMs(): number {
+    return this.runtimeMs
+  }
 }

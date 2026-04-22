@@ -50,22 +50,24 @@ export class OrchestratorAgent {
     this.timeController.start()
 
     while (this.timeController.shouldContinue()) {
-      const remainingFiles = this.fileScheduler.getRemaining()
-
-      if (remainingFiles.length === 0) {
-        // All files scanned in this round - reset if time allows
-        const remaining = this.timeController.remainingMs()
-        if (remaining < 60000) break // Less than 1 minute left
-        this.fileScheduler.reset()
-        this.session.currentRound++
-        continue
-      }
-
       // Get batch of files to process
       const batchSize = this.config.workerCount * this.config.crossValidationCount
       const batch = this.fileScheduler.nextBatch(batchSize)
 
       if (batch.length === 0) {
+        // 本批次处理完毕，检查是否可以开启新轮次
+        const remaining = this.timeController.remainingMs()
+        const totalMs = this.timeController.getTotalMs()
+        const minRoundTime = Math.min(60000, totalMs * 0.1)  // 剩余时间的 10% 或 1 分钟
+
+        if (remaining < minRoundTime) break
+
+        if (this.fileScheduler.allConsumed()) {
+          this.fileScheduler.reset()
+          this.session.currentRound++
+          console.log(`Round ${this.session.currentRound} started`)
+        }
+
         await sleep(100)
         continue
       }
