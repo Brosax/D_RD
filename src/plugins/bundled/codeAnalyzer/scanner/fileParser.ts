@@ -18,7 +18,7 @@ export class FileParser {
     }
   }
 
-  private preprocess(content: string, filePath: string): string {
+  private preprocess(content: string, _filePath: string): string {
     // Remove single-line comments
     content = this.removeSingleLineComments(content)
     // Remove multi-line comments
@@ -31,17 +31,22 @@ export class FileParser {
 
   private removeSingleLineComments(content: string): string {
     const lines: string[] = []
-    let inString = false
 
     for (const line of content.split('\n')) {
       let result = ''
       let i = 0
+      let inString = false
+      let inChar = false
 
       while (i < line.length) {
         const char = line[i]
+        const prev = i > 0 ? line[i - 1] : ''
 
-        if (char === '"' && (i === 0 || line[i - 1] !== '\\')) {
+        if (char === '"' && !inChar && prev !== '\\') {
           inString = !inString
+          result += char
+        } else if (char === '\'' && !inString && prev !== '\\') {
+          inChar = !inChar
           result += char
         } else if (!inString && i + 1 < line.length && line.slice(i, i + 2) === '//') {
           break
@@ -59,25 +64,45 @@ export class FileParser {
   private removeMultiLineComments(content: string): string {
     const result: string[] = []
     let inComment = false
+    let inString = false
+    let inChar = false
     let i = 0
 
     while (i < content.length) {
-      if (content[i] === '/' && i + 1 < content.length) {
-        if (content[i + 1] === '*' && !inComment) {
+      const char = content[i]
+      const next = i + 1 < content.length ? content[i + 1] : ''
+      const prev = i > 0 ? content[i - 1] : ''
+
+      if (!inComment && char === '"' && !inChar && prev !== '\\') {
+        inString = !inString
+        result.push(char)
+        i++
+        continue
+      }
+
+      if (!inComment && char === '\'' && !inString && prev !== '\\') {
+        inChar = !inChar
+        result.push(char)
+        i++
+        continue
+      }
+
+      if (!inString && !inChar && char === '/' && i + 1 < content.length) {
+        if (next === '*' && !inComment) {
           inComment = true
           i += 2
           continue
-        } else if (content[i + 1] === '*' && inComment) {
-          if (i + 2 < content.length && content[i + 2] === '/') {
-            inComment = false
-            i += 3
-            continue
-          }
+        }
+
+        if (next === '/' && inComment) {
+          inComment = false
+          i += 2
+          continue
         }
       }
 
       if (!inComment) {
-        result.push(content[i])
+        result.push(char)
       }
       i++
     }

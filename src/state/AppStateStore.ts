@@ -124,6 +124,15 @@ export type AppState = DeepImmutable<{
     | 'connected'
     | 'reconnecting'
     | 'disconnected'
+  // Code analyzer plugin progress for bottom bar display
+  codeAnalyzerProgress?: {
+    remainingSeconds: number
+    filesScanned: number
+    filesTotal: number
+    startTime: number
+    runtimeMinutes: number
+    phase: string
+  }
   // `claude assistant`: count of background tasks (Agent calls, teammates,
   // workflows) running inside the REMOTE daemon child. Event-sourced from
   // system/task_started and system/task_notification on the WS. The local

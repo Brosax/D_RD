@@ -41,7 +41,7 @@ export class RuleEngine {
   }
 
   private findPatternMatches(
-    content: string,
+    _content: string,
     lines: string[],
     pattern: string,
     rule: SesipRule,
@@ -54,9 +54,9 @@ export class RuleEngine {
 
       for (let lineNum = 0; lineNum < lines.length; lineNum++) {
         const line = lines[lineNum]
-        const match = regex.exec(line)
+        regex.lastIndex = 0
 
-        if (match) {
+        for (const match of line.matchAll(regex)) {
           // Check false positives
           if (this.isFalsePositive(rule, line, match[0])) {
             continue

@@ -25,12 +25,11 @@ export class DedupEngine {
       const existing = this.primaryIndex.get(key)!
 
       // Update reportedBy (avoid duplicates)
-      if (!existing.reportedBy.includes(finding.workerId)) {
+      const isNewReporter = !existing.reportedBy.includes(finding.workerId)
+      if (isNewReporter) {
         existing.reportedBy.push(finding.workerId)
+        existing.agentCount = existing.reportedBy.length
       }
-
-      // Increment agent count
-      existing.agentCount++
 
       // Merge evidence if not already present
       const newEvidence = {

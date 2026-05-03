@@ -25,6 +25,19 @@ export class FileScheduler {
     return this.files.slice(this.index)
   }
 
+  getRemainingFiles(): string[] {
+    return this.getRemaining()
+  }
+
+  peekBatch(batchSize: number): string[] {
+    if (this.index >= this.files.length) {
+      return []
+    }
+
+    const end = Math.min(this.index + batchSize, this.files.length)
+    return this.files.slice(this.index, end)
+  }
+
   nextBatch(batchSize: number): string[] {
     if (this.index >= this.files.length) {
       return []

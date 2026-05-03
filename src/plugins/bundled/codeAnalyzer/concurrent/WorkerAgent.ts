@@ -2,13 +2,22 @@
  * Worker agent for file analysis
  */
 
+import { LocalModelClient, type AnalysisModelContext } from '../llm/localClient.js'
 import type { WorkerFinding, WorkerResult } from './types.js'
 
 export class WorkerAgent {
   private workerId: string
+  private modelContext?: AnalysisModelContext
+  private llmClient: LocalModelClient
 
-  constructor(workerId: string) {
+  constructor(
+    workerId: string,
+    modelContext?: AnalysisModelContext,
+    llmClient: LocalModelClient = new LocalModelClient()
+  ) {
     this.workerId = workerId
+    this.modelContext = modelContext
+    this.llmClient = llmClient
   }
 
   getId(): string {
@@ -27,12 +36,10 @@ export class WorkerAgent {
     try {
       // Import rule engine and LLM client dynamically to avoid circular deps
       const { RuleEngine } = await import('../rules/engine.js')
-      const { LocalModelClient } = await import('../llm/localClient.js')
       const { FileParser } = await import('../scanner/fileParser.js')
 
       const parser = new FileParser()
       const ruleEngine = new RuleEngine()
-      const llmClient = new LocalModelClient()
 
       const content = await parser.parse(filePath)
       if (!content) {
@@ -46,10 +53,10 @@ export class WorkerAgent {
       // Phase 2: LLM analysis for all matches
       const llmResults = new Map()
       for (const match of ruleMatches) {
-        const result = await llmClient.analyzeContext(match.snippet, {
+        const result = await this.llmClient.analyzeContext(match.snippet, {
           file: filePath,
           rule: match.ruleId,
-        })
+        }, this.modelContext)
         if (result) {
           llmResults.set(match.ruleId, result)
         }

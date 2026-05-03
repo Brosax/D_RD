@@ -2,7 +2,7 @@
  * Types for concurrent multi-agent analysis
  */
 
-import type { Evidence, Finding } from '../types.js'
+import type { Evidence } from '../types.js'
 
 /**
  * Configuration for concurrent analysis mode
@@ -12,7 +12,7 @@ export interface ConcurrentAnalysisConfig {
   runtimeMinutes: number
   workerCount: number
   crossValidationCount: number
-  outputFormat: 'json' | 'html'
+  outputFormat: 'json' | 'markdown'
   outputPath?: string
 }
 

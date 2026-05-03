@@ -1,6 +1,7 @@
 import type { LspServerConfig } from '../services/lsp/types.js'
 import type { McpServerConfig } from '../services/mcp/types.js'
 import type { BundledSkillDefinition } from '../skills/bundledSkills.js'
+import type { Command } from './command.js'
 import type {
   CommandMetadata,
   PluginAuthor,
@@ -24,6 +25,8 @@ export type BuiltinPluginDefinition = {
   version?: string
   /** Skills provided by this plugin */
   skills?: BundledSkillDefinition[]
+  /** Commands provided by this plugin */
+  commands?: Command[]
   /** Hooks provided by this plugin */
   hooks?: HooksSettings
   /** MCP servers provided by this plugin */

@@ -1,0 +1,21 @@
+{
+  "workerId": "worker-1",
+  "filePath": "a.c",
+  "scanDurationMs": 18,
+  "findings": [
+    {
+      "workerId": "worker-1",
+      "ruleId": "MS-001",
+      "title": "Buffer Overflow - String Copy",
+      "severity": "high",
+      "confidence": "possible",
+      "file": "a.c",
+      "line": 4,
+      "snippet": "   4| strcpy(buf, src);",
+      "description": "possible overflow",
+      "remediation": "Use snprintf",
+      "category": "memory_safety"
+    }
+  ],
+  "errors": []
+}

@@ -255,6 +255,7 @@ function PluginComponentsDisplay({
           const builtinDef = getBuiltinPluginDefinition(plugin.name)
           if (builtinDef) {
             const skillNames = builtinDef.skills?.map(s => s.name) ?? []
+            const commandNames = builtinDef.commands?.map(c => c.name) ?? []
             const hookEvents = builtinDef.hooks
               ? Object.keys(builtinDef.hooks)
               : []
@@ -262,7 +263,7 @@ function PluginComponentsDisplay({
               ? Object.keys(builtinDef.mcpServers)
               : []
             setComponents({
-              commands: null,
+              commands: commandNames.length > 0 ? commandNames : null,
               agents: null,
               skills: skillNames.length > 0 ? skillNames : null,
               hooks: hookEvents.length > 0 ? hookEvents : null,

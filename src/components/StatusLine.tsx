@@ -193,6 +193,7 @@ function StatusLineInner({
     s => s.toolPermissionContext.additionalWorkingDirectories,
   )
   const statusLineText = useAppState(s => s.statusLineText)
+  const codeAnalyzerProgress = useAppState(s => s.codeAnalyzerProgress)
   const setAppState = useSetAppState()
   const settings = useSettings()
   const { addNotification } = useNotifications()
@@ -390,6 +391,26 @@ function StatusLineInner({
   // Get padding from settings or default to 0
   const paddingX = settings?.statusLine?.padding ?? 0
 
+  // Format remaining time as mm:ss
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${String(secs).padStart(2, '0')}`
+  }
+
+  // Calculate dynamic remaining time based on startTime
+  // This ensures the countdown updates every render
+  const displayProgress = codeAnalyzerProgress
+    ? {
+        ...codeAnalyzerProgress,
+        remainingSeconds: Math.max(
+          0,
+          codeAnalyzerProgress.runtimeMinutes * 60 -
+            Math.floor((Date.now() - codeAnalyzerProgress.startTime) / 1000),
+        ),
+      }
+    : null
+
   // StatusLine must have stable height in fullscreen — the footer is
   // flexShrink:0 so a 0→1 row change when the command finishes steals
   // a row from ScrollBox and shifts content. Reserve the row while loading
@@ -403,6 +424,15 @@ function StatusLineInner({
       ) : isFullscreenEnvEnabled() ? (
         <Text> </Text>
       ) : null}
+      {displayProgress && (
+        <Text dimColor wrap="truncate">
+          {'[code-analyzer] '}
+          <Text bold color="warning">
+            {formatTime(displayProgress.remainingSeconds)}
+          </Text>
+          {` ${displayProgress.phase} ${displayProgress.filesScanned}/${displayProgress.filesTotal} files`}
+        </Text>
+      )}
     </Box>
   )
 }

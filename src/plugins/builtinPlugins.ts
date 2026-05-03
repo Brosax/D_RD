@@ -102,19 +102,21 @@ export function getBuiltinPlugins(): {
 }
 
 /**
- * Get skills from enabled built-in plugins as Command objects.
- * Skills from disabled plugins are not returned.
+ * Get commands from enabled built-in plugins as Command objects.
+ * Prompt skills are converted into Commands and local commands are passed
+ * through directly. Components from disabled plugins are not returned.
  */
-export function getBuiltinPluginSkillCommands(): Command[] {
+export function getBuiltinPluginCommands(): Command[] {
   const { enabled } = getBuiltinPlugins()
   const commands: Command[] = []
 
   for (const plugin of enabled) {
     const definition = BUILTIN_PLUGINS.get(plugin.name)
-    if (!definition?.skills) continue
-    for (const skill of definition.skills) {
+    if (!definition) continue
+    for (const skill of definition.skills ?? []) {
       commands.push(skillDefinitionToCommand(skill))
     }
+    commands.push(...(definition.commands ?? []))
   }
 
   return commands

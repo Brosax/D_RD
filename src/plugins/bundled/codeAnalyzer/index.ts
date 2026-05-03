@@ -2,107 +2,85 @@
  * Code Analyzer Builtin Plugin Registration
  */
 
-import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/index.mjs'
 import { registerBuiltinPlugin } from '../../builtinPlugins.js'
-import type { BundledSkillDefinition } from '../../../skills/bundledSkills.js'
-import type { ToolUseContext } from '../../../Tool.js'
+import type { Command, LocalCommandCall } from '../../../types/command.js'
 
-// Read SKILL.md content
-import { readFileSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-function loadSkillMd(): string {
-  try {
-    return readFileSync(
-      join(__dirname, 'commands', 'code-analyzer', 'SKILL.md'),
-      'utf-8'
-    )
-  } catch {
-    return ''
+function parseCommandArgs(args: string): string[] {
+  if (!args.trim()) {
+    return []
   }
+
+  const tokens = args.match(/"[^"]*"|'[^']*'|\S+/g) ?? []
+  return tokens.map(token => {
+    if (
+      (token.startsWith('"') && token.endsWith('"')) ||
+      (token.startsWith("'") && token.endsWith("'"))
+    ) {
+      return token.slice(1, -1)
+    }
+    return token
+  })
 }
 
-function parseArgs(args: string): {
-  targetPath: string | undefined
-  outputFormat: 'json' | 'html'
-  outputPath: string | undefined
-  runtimeMinutes: number | undefined
-  workerCount: number | undefined
-} {
-  const parts = args.split(/\s+/)
-  let targetPath: string | undefined
-  let outputFormat: 'json' | 'html' = 'json'
-  let outputPath: string | undefined
-  let runtimeMinutes: number | undefined
-  let workerCount: number | undefined
+const analyzeCommandCall: LocalCommandCall = async (args, context) => {
+  const { codeAnalyzerPlugin } = await import('./CodeAnalyzerPlugin.js')
+  const result = await codeAnalyzerPlugin.execute(parseCommandArgs(args), context)
 
-  for (let i = 0; i < parts.length; i++) {
-    const arg = parts[i]
-    if (arg === '--format' && i + 1 < parts.length) {
-      const format = parts[++i].toLowerCase()
-      if (format === 'json' || format === 'html') {
-        outputFormat = format
-      }
-    } else if (arg === '--output' && i + 1 < parts.length) {
-      outputPath = parts[++i]
-    } else if (arg === '--runtime' && i + 1 < parts.length) {
-      runtimeMinutes = parseInt(parts[++i], 10)
-    } else if (arg === '--workers' && i + 1 < parts.length) {
-      workerCount = parseInt(parts[++i], 10)
-    } else if (!arg.startsWith('-')) {
-      targetPath = arg
+  if (result.status !== 'success') {
+    return {
+      type: 'text',
+      value:
+        typeof result.message === 'string'
+          ? result.message
+          : 'Code analysis failed.',
     }
   }
 
-  return { targetPath, outputFormat, outputPath, runtimeMinutes, workerCount }
+  if (result.format === 'json') {
+    const outputFile =
+      typeof result.outputFile === 'string' && result.outputFile.length > 0
+        ? result.outputFile
+        : undefined
+    return {
+      type: 'text',
+      value: outputFile
+        ? `JSON report written to ${outputFile}`
+        : JSON.stringify(result.data, null, 2),
+    }
+  }
+
+  if (result.format === 'markdown') {
+    const outputFile =
+      typeof result.outputFile === 'string' && result.outputFile.length > 0
+        ? result.outputFile
+        : undefined
+
+    return {
+      type: 'text',
+      value: outputFile
+        ? `SESIP report written to ${outputFile}`
+        : typeof result.output === 'string'
+          ? result.output
+          : 'SESIP report generated successfully.',
+    }
+  }
+
+  return {
+    type: 'text',
+    value: JSON.stringify(result, null, 2),
+  }
 }
 
-const analyzeSkill: BundledSkillDefinition = {
+const analyzeCommand = {
+  type: 'local',
   name: 'code-analyzer',
   description:
-    'Analyze C/C++ source code for security vulnerabilities and SESIP compliance',
+    'Run SESIP-oriented code analysis for bootloader and security related source code',
   argumentHint: '<path_to_code>',
-  whenToUse: 'When you need to audit C/C++ firmware code for security issues',
-  allowedTools: ['Glob', 'Read', 'Bash'],
-  disableModelInvocation: false,
-  userInvocable: true,
+  supportsNonInteractive: true,
   isEnabled: () => true,
-  getPromptForCommand: async (
-    args: string,
-    _context: ToolUseContext
-  ): Promise<ContentBlockParam[]> => {
-    const skillContent = loadSkillMd()
-    if (!skillContent) {
-      return [
-        {
-          type: 'text',
-          text: `Analyze C/C++ code at path: ${args || '<path>'}`,
-        },
-      ]
-    }
-
-    // Parse args for workers and runtime
-    const parsedArgs = parseArgs(args || '<path>')
-    const runtime = parsedArgs.runtimeMinutes ?? 5
-    const workers = parsedArgs.workerCount ?? 1
-
-    // Simple variable substitution and return as content block
-    const prompt = skillContent
-      .replace(/\$\{args\[0\]\}/g, args || '<path>')
-      .replace(/\$\{target_path\}/g, parsedArgs.targetPath || '<path>')
-
-    return [
-      {
-        type: 'text',
-        text: prompt,
-      },
-    ]
-  },
-}
+  load: () => Promise.resolve({ call: analyzeCommandCall }),
+} satisfies Command
 
 export function registerCodeAnalyzerBuiltinPlugin(): void {
   registerBuiltinPlugin({
@@ -111,6 +89,6 @@ export function registerCodeAnalyzerBuiltinPlugin(): void {
       'C/C++ source code security analysis plugin for SESIP compliance. Provides /code-analyzer command for security auditing.',
     version: MACRO.VERSION,
     defaultEnabled: true,
-    skills: [analyzeSkill],
+    commands: [analyzeCommand],
   })
 }
